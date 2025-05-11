@@ -1,0 +1,31 @@
+{
+    "taskbar": {
+        "x": 320,
+        "y": 1040,
+        "width": 270,
+        "height": 40
+    },
+    "taskbar_icons":[
+        {
+            "icon": "browser",
+            "x": 45,
+            "y": 0,
+            "width": 45,
+            "height": 40
+        },
+        {
+            "icon": "editor",
+            "x": 90,
+            "y": 0,
+            "width": 45,
+            "height": 40
+        },
+        {
+            "icon": "notepad",
+            "x": 225,
+            "y": 0,
+            "width": 45,
+            "height": 40
+        }
+    ]
+}
