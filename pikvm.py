@@ -66,7 +66,7 @@ class PiKVM:
             params["finish"] = str(finish).lower()
             
         url = f"https://{self.BASE_URL}/api/hid/events/send_key"
-        async with  self.session.post(url, params=params, auth=self.auth) as r:
+        async with self.session.post(url, params=params, auth=self.auth) as r:
             r.raise_for_status()
 
     async def human_typing(self, text: str, wpm=120, error_rate=0.05, error_upper_limit=3):
@@ -132,21 +132,54 @@ class PiKVM:
         async with self.session.post(url, params=params, auth=self.auth) as r:
             r.raise_for_status()
 
+    async def send_mouse_wheel(self, delta_x: int, delta_y: int):
+        """Sends mouse wheel events to PiKVM.
+        
+        Args:
+            delta_x: Horizontal scroll amount
+            delta_y: Vertical scroll amount
+        """
+        params = {
+            "delta_x": str(delta_x),
+            "delta_y": str(delta_y)
+        }
+        url = f"https://{self.BASE_URL}/api/hid/events/send_mouse_wheel"
+        async with self.session.post(url, params=params, auth=self.auth) as r:
+            r.raise_for_status()
+    
+    async def send_websocket_events(self, events):
+        """Sends a list of events to the PiKVM websocket.
+
+        Args:
+            events: List of events to send
+        """
+        headers = {"X-KVMD-User": self.USERNAME, "X-KVMD-Passwd": self.PASSWORD}
+        async with self.session.ws_connect(f"wss://{self.BASE_URL}/api/ws", headers=headers, ssl=False) as ws:
+            for event in events:
+                if event["event_type"] == "delay":
+                    await asyncio.sleep(event["event"]["millis"] / 1000)
+                else:
+                    await ws.send_json(event)
+
     async def close(self):
         await self.session.close()
 
 async def main():
     pikvm = PiKVM()
-    text = "Hello World, Chicken Jockey Bacon and Eggs"
-    await asyncio.gather(
+    text = "Hello World, Chicken Jockey Bacon and Eggs\n"
+
+    await asyncio.gather( # Do all actions in parallel
         pikvm.human_typing(text),
         pikvm.send_mouse_move(0, 0),
         pikvm.send_mouse_button("left")
     )
+
+    await pikvm.send_mouse_move(1000, 0),
+    await pikvm.send_mouse_button("left")
+    await pikvm.human_typing(text), # Do actions sequentially
+
     await pikvm.close()
 
 if __name__ == "__main__":
     time.sleep(2)
-    print("Starting async stuff")
     asyncio.run(main())
-    print("Starting main screenshot")
